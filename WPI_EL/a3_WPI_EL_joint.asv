@@ -1,0 +1,43 @@
+clc
+clear all
+close all
+tic
+
+mydir  = pwd;
+idcs   = strfind(mydir,'\');
+newdir = mydir(1:idcs(end)-1);
+load([newdir '/par.mat'])
+
+MC_file = [newdir '/MC/files/MC45_' num2str(1000) '_tot' num2str(10) '_fs' num2str(100) '.mat'];
+
+ndof = par.ndof;
+ord  = 2;
+ti = 0;
+
+tfs = 0.05*[1:20];
+
+% Time parameters
+% Fs = 100;
+%Fss = floor(10./tfs);
+
+points = 21;
+targetPDF = [100,200];
+
+domain = c1_Get_bounds(MC_file,targetPDF,tf,1e-3)
+
+tic
+action = b3_functional_minimization_EL_joint( ... 
+           points, domain, ord, targetPDF, ... 
+           par, ti, tfs, Fss);
+
+PDF = exp(-action);
+
+elapsed_time = toc;
+
+save(['files/WPI_EL_joint_' num2str(targetPDF(1)) '_' num2str(targetPDF(2)) ...
+        '_tf' num2str(tf) '_fs' num2str(Fs) '.mat'],...
+        'points','domain','PDF','targetPDF','par','Fs','elapsed_time');
+
+toc
+
+beep
